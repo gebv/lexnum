@@ -5,10 +5,12 @@ import (
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/gebv/go-primitive/intx"
 )
 
 var lexNumTests = []struct {
-	in  int
+	in  int64
 	out string
 }{
 	{0, "0"},
@@ -50,13 +52,13 @@ func TestLexnum(t *testing.T) {
 	}
 
 	// -150 to 150 test
-	nums, stringz := make([]int, 0, 301), make([]string, 0, 301)
-	for x := -150; x <= 150; x += 1 {
+	nums, stringz := make([]int64, 0, 301), make([]string, 0, 301)
+	for x := int64(-150); x <= 150; x += 1 {
 		nums = append(nums, x)
 		stringz = append(stringz, e.EncodeInt(x))
 	}
 	sort.Strings(stringz)
-	sort.Ints(nums)
+	intx.Int64s(nums).Sort()
 	for i := 0; i < len(nums); i++ {
 		n, err := e.DecodeInt(stringz[i])
 		if err != nil {
@@ -73,16 +75,16 @@ func TestLexnum(t *testing.T) {
 	// random test
 	runsize := 8
 	for runz := 0; runz < 4; runz += 1 {
-		nums, stringz := make([]int, runsize), make([]string, runsize)
+		nums, stringz := make([]int64, runsize), make([]string, runsize)
 		for i := 0; i < runsize; i++ {
-			nums[i] = rand.Int()
+			nums[i] = rand.Int63()
 			if rand.Int()%2 == 0 {
 				nums[i] = -nums[i]
 			}
 			stringz[i] = e.EncodeInt(nums[i])
 		}
 		sort.Strings(stringz)
-		sort.Ints(nums)
+		intx.Int64s(nums).Sort()
 		t.Logf("stringz sorted: %v", stringz)
 		t.Logf("nums sorted: %v", nums)
 		for i := 0; i < runsize; i++ {

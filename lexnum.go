@@ -38,7 +38,7 @@ func NewEncoder(pos rune, neg rune) *Encoder {
 }
 
 // Encodes an integer as a string.
-func (l Encoder) EncodeInt(i int) string {
+func (l Encoder) EncodeInt(i int64) string {
 	if i == 0 {
 		return "0"
 	}
@@ -48,26 +48,26 @@ func (l Encoder) EncodeInt(i int) string {
 	return l.encodeNeg(i)
 }
 
-func (l Encoder) encodePos(i int) string {
-	s := strconv.Itoa(i)
+func (l Encoder) encodePos(i int64) string {
+	s := strconv.FormatInt(i, 10)
 	if len(s) == 1 {
 		return fmt.Sprintf("%c%s", l.pos, s)
 	}
-	return fmt.Sprintf("%c%s%s", l.pos, l.encodePos(len(s)), s)
+	return fmt.Sprintf("%c%s%s", l.pos, l.encodePos(int64(len(s))), s)
 }
 
-func (l Encoder) encodeNeg(i int) string {
+func (l Encoder) encodeNeg(i int64) string {
 	if i < 0 {
 		i = -i
 	}
-	runes := []rune(strconv.Itoa(i))
+	runes := []rune(strconv.FormatInt(i, 10))
 	for i := range runes {
 		runes[i] = l.flip(runes[i])
 	}
 	if len(runes) == 1 {
 		return fmt.Sprintf("%c%s", l.neg, string(runes))
 	}
-	return fmt.Sprintf("%c%s%s", l.neg, l.encodeNeg(len(runes)), string(runes))
+	return fmt.Sprintf("%c%s%s", l.neg, l.encodeNeg(int64(len(runes))), string(runes))
 }
 
 func (l Encoder) flip(r rune) rune {
@@ -120,7 +120,7 @@ func (l Encoder) prefixCount(runes []rune) int {
 }
 
 // Decodes a lexnum string, returning its original integer representation.
-func (l Encoder) DecodeInt(s string) (int, error) {
+func (l Encoder) DecodeInt(s string) (int64, error) {
 	if s == "" {
 		return 0, fmt.Errorf("illegal Lexnum decode of empty string")
 	}
@@ -141,11 +141,11 @@ func (l Encoder) DecodeInt(s string) (int, error) {
 	}
 }
 
-func (l Encoder) decodePos(runes []rune) (int, error) {
+func (l Encoder) decodePos(runes []rune) (int64, error) {
 	return l._decodePos(runes, 1, l.prefixCount(runes))
 }
 
-func (l Encoder) _decodePos(runes []rune, size int, index int) (int, error) {
+func (l Encoder) _decodePos(runes []rune, size int, index int) (int64, error) {
 	n, err := strconv.ParseInt(string(runes[index:index+size]), 10, 64)
 	if err != nil {
 		return 0, err
@@ -154,13 +154,13 @@ func (l Encoder) _decodePos(runes []rune, size int, index int) (int, error) {
 		return 0, fmt.Errorf("illegal Lexnum decode of abnormally long string %s", string(runes))
 	}
 	if index+size == len(runes) {
-		return int(n), nil
+		return int64(int(n)), nil
 	}
 	return l._decodePos(runes, int(n), index+size)
 
 }
 
-func (l Encoder) decodeNeg(runes []rune) (int, error) {
+func (l Encoder) decodeNeg(runes []rune) (int64, error) {
 	p := l.prefixCount(runes)
 	l.flipInPlace(runes[p:len(runes)])
 	n, err := l._decodePos(runes, 1, p)
